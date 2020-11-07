@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>machine test</title>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+</head>
+
+<body>
+    <div class="container">
+        <h1>Player details</h1>
+        <div class="form-group">
+            <input class="form-control player-search" type="text" placeholder="search a player..."
+                onkeyup="searchPlayer()" />
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover players-table"></table>
+        </div>
+    </div>
+    <script>
+        const URL = "https://api.jsonbin.io/b/5d0c6e6a860ae0341876aac6/2";
+        const playerSearch = document.querySelector('.player-search');
+        let allPlayers = [];
+
+        fetch(URL)
+            .then(response => response.json())
+            .then(player => {
+                allPlayers = JSON.parse(JSON.stringify(player));
+                listOfPlayerNames(player);
+            });
+
+        function listOfPlayerNames(player) {
+            document.querySelector('.players-table').innerHTML = "";
+            document.querySelector('.players-table').innerHTML += `
+            <thead>
+                <tr>
+                    <td></td>
+                    <td>Full Name</td>
+                    <td>Skill</td>
+                    <td>Players Value</td>
+                    <td>Next matches</td>
+                    <td>Next Match Date</td>
+                </tr>    
+            </thead>
+            <tbody>
+            `
+            player = player.sort((a, b) => a.Value - b.Value);
+            player.map(plr => {
+                document.querySelector('.players-table').innerHTML += `
+                <tr>
+                    <td><img src="images/${plr.Id}.jpg" style="width: 30px; height: auto;"/></td>
+                    <td>${plr.PFName}</td>
+                    <td>${plr.SkillDesc}</td>
+                    <td>${formatValue(plr.Value)}</td>
+                    <td>${UpComingMatchesList(plr.UpComingMatchesList)}</td>
+                    <td>${nextMatch(plr.UpComingMatchesList[0].MDate)}</td>
+                </tr>
+                `
+            });
+            document.querySelector('.players-table').innerHTML += `
+            </tbody>
+            `;
+
+        }
+
+        function formatValue(value) {
+            return '$' + value;
+        }
+
+        function UpComingMatchesList(upcomingMatches) {
+            let ccode = '';
+            let VsCCode = '';
+            if (upcomingMatches && upcomingMatches.length > 0) {
+                ccode = upcomingMatches[0].CCode;
+                VsCCode = upcomingMatches[0].VsCCode;
+            }
+            return (ccode && VsCCode) ? (ccode + ' vs ' + VsCCode) : '';
+        }
+
+        function nextMatch(userTimezone) {
+            if (userTimezone) {
+                let dt = new Date(`${userTimezone} UTC`);
+                let formattedDate = dt.toLocaleString().replaceAll('/', '-').replaceAll(',', '');
+                return formattedDate;
+            }
+            return "";
+        }
+
+        function searchPlayer() {
+            if (playerSearch.value.length > 0) {
+                let filtersPlayer = allPlayers.filter(item => {
+                    return (item.PFName.toLowerCase().indexOf(playerSearch.value) > -1);
+                });
+                listOfPlayerNames(filtersPlayer);
+            } else {
+                listOfPlayerNames(allPlayers);
+            }
+
+        }
+    </script>
+</body>
+
+</html>
